@@ -1,0 +1,35 @@
+[project]
+name = "ledgerza"
+version = "0.1.0"
+description = "South African bank csv parser and expense summariser"
+readme = "README.md"
+license = {file = "LICENSE.md"}
+requires-python = ">=3.9"
+authors = [
+	{name = "Botshelo Mere"}
+]
+classifiers = [
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.9",
+    "Programming Language :: Python :: 3.10",
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
+    "License :: OSI Approved :: MIT License",
+    "Intended Audience :: End Users/Desktop",
+    "Topic :: Office/Business :: Financial",
+    "Development Status :: 3 - Alpha"
+]
+keywords = ["finance", "csv", "banking", "cli", "parser", "bank-statement"]
+dependencies = []
+
+[project.scripts]
+ledgerza= "ledgerza.cli:main"
+
+[project.urls]
+Repository = "https://github.com/botshelo-mere/ledgerza.git"
+Issues = "https://github.com/botshelo-mere/ledgerza/issues"
+License = "https://github.com/botshelo-mere/ledgerza/blob/main/LICENSE.md"
+
+[build-system]
+requires = ["setuptools>=65.0"]
+build-backend = "setuptools.build_meta"
