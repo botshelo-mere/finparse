@@ -8,7 +8,6 @@ ledgerza --file [PATH ...] [options]
 
 `PATH` can be:
 - A single CSV file
-- Multiple CSV files (use `--merge` to combine them)
 - A single folder (scans all `.csv` / `.tsv` files inside it)
 
 ---
@@ -112,14 +111,14 @@ Only transactions within January 2026 appear in summary and export.
 ledgerza -f statement.csv --max-amount -500
 ```
 
-Amounts are signed: negative = debit. `--max-amount -500` keeps transactions where `amount <= -500`, i.e. debits of R500 or more.
+Amounts are signed: negative = debit. `--max-amount -500` keeps transactions where `amount <= -500`, meaning debits of R500 or more.
 
 ---
 
 ### Keyword search
 
 ```bash
-ledgerza --file statement.csv --keyword woolworths
+ledgerza --file statement.csv --keyword "woolworths"
 ```
 
 Case-insensitive. Matches any description containing "woolworths".
@@ -129,7 +128,7 @@ Case-insensitive. Matches any description containing "woolworths".
 ### Category filter
 
 ```bash
-ledgerza -f statement.csv --category groceries
+ledgerza -f statement.csv --category "groceries"
 ```
 
 Outputs only transactions in the `groceries` category.
