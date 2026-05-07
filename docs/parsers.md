@@ -3,7 +3,7 @@
 ## FNB (First National Bank)
 
 **Source:** `ledgerza/parsers/fnb.py`  
-**Spec:** File Specification: Statement Export — Statement Type: CSV (July 2012)  
+**Spec:** [File Specification: Statement Export — Statement Type: CSV (July 2012)](https://www.online.fnb.co.za/rhelp_0_15/Downloads/Statement_File_Specifications/Statement_Type_-_CSV.pdf)  
 **Identifier:** `"fnb"`
 
 ### File structure
@@ -108,4 +108,4 @@ All parsers share these behaviours via `BaseParser`:
 - **Blank row filtering**: empty rows silently skipped
 - **Key normalisation**: all column names lowercased and stripped before matching
 - **Per-row error collection**: bad rows recorded in `ParseResult.errors`, never abort
-- **File-level errors**: `FileNotFoundError`, `ValueError` (empty) → single error entry with `row=0`
+- **File-level errors**: `FileNotFoundError`, `ValueError` (empty) -> single error entry with `row=0`
