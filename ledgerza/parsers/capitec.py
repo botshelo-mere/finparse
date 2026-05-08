@@ -33,10 +33,6 @@ class CapitecParser(BaseParser):
 
     @classmethod
     def can_parse(cls, path: Path) -> bool:
-        """
-        Capitec files: first line is a header containing
-        'posting date', 'money in', 'money out' — all three required.
-        """
         try:
             with path.open(encoding="utf-8-sig", errors="replace") as fh:
                 for line in fh:
@@ -80,7 +76,7 @@ class CapitecParser(BaseParser):
         }
 
     def _parse_row(self, row: dict[str, str], row_num: int) -> dict:
-        # ── Required: at least one date 
+        # Required: at least one date 
         raw_date = row.get("posting_date") or row.get("transaction_date", "")
         if not raw_date:
             return make_error(

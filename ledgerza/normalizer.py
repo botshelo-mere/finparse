@@ -18,7 +18,7 @@ _DATE_FORMATS = (
 
 def parse_date(raw: str) -> str | None:
     """
-    Parse any recognised date string → ISO 8601 'YYYY-MM-DD'.
+    Parses any recognised date string -> ISO 8601 'YYYY-MM-DD'.
     Returns None on any failure.
     """
     if not raw or not raw.strip():
@@ -35,7 +35,7 @@ def parse_date(raw: str) -> str | None:
 #  Amount parsing 
 def parse_amount(raw: str) -> float | None:
     """ 
-    Parse a monetary string into a signed float.
+    Parses a monetary string into a signed float.
     Returns None on any parse failure.
     """
     if not raw or not raw.strip():
@@ -72,7 +72,7 @@ def parse_amount(raw: str) -> float | None:
     if comma_idx != -1 and dot_idx != -1:
         if comma_idx > dot_idx:          # European: 1.000,50
             s = s.replace(".", "").replace(",", ".")
-        else:                             # US: 1,000.50
+        else:    # US: 1,000.50
             s = s.replace(",", "")
     elif comma_idx != -1:
         after = s[comma_idx + 1:]
@@ -82,7 +82,7 @@ def parse_amount(raw: str) -> float | None:
             s = s.replace(",", "")        # comma is thousands
     # else: dot only — leave as-is
 
-    s = s.replace(" ", "")               # strip space-thousands
+    s = s.replace(" ", "")      # strip space-thousands
 
     try:
         value = float(s)

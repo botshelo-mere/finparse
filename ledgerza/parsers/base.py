@@ -20,9 +20,9 @@ class ParseResult:
         source_file: str = "",
     ) -> None:
         self.transactions = transactions
-        self.errors       = errors
-        self.meta         = meta or {}
-        self.source_file  = source_file
+        self.errors = errors
+        self.meta = meta or {}
+        self.source_file = source_file
 
     def ok(self) -> bool:
         return len(self.transactions) > 0
@@ -68,7 +68,6 @@ class BaseParser(ABC):
         ...
 
     # Shared helpers 
-
     def _load(self, path: Path) -> tuple[list[str], str]:
         """
         Reads raw lines from file with encoding fallback.

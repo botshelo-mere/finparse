@@ -1,9 +1,7 @@
 from __future__ import annotations
 from typing import Any
 
-
 #  Canonical transaction 
-
 TRANSACTION_FIELDS = (
     "date",          # str  — ISO 8601 'YYYY-MM-DD'
     "description",   # str  — uppercased, stripped
@@ -44,7 +42,6 @@ def make_transaction(
 
 
 #  Parse error 
-
 def make_error(
     *,
     row: int,
@@ -54,7 +51,7 @@ def make_error(
 ) -> dict[str, Any]:
     """
     Factory for parse error dicts.
-    Errors are collected per-row; a bad row never aborts a file.
+    Errors are collected per-row; an invalid row never aborts a file.
     """
     return {
         "row":    row,
@@ -65,7 +62,6 @@ def make_error(
 
 
 #  Statement metadata (FNB header block) 
-
 def make_statement_meta(
     *,
     account_number: str = "",

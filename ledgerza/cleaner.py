@@ -3,15 +3,12 @@ from typing import Any
 
 
 # Deduplication 
-
 def deduplicate(
     transactions: list[dict[str, Any]],
     keys: tuple[str, ...] = ("date", "description", "amount"),
 ) -> tuple[list[dict[str, Any]], int]:
     """
-    Remove exact duplicates by hashing a subset of fields.
-    First occurrence wins.
-
+    Removes exact duplicates by hashing a subset of fields.
     Returns (deduplicated_list, count_removed).
     """
     seen: set[tuple] = set()
@@ -30,7 +27,6 @@ def deduplicate(
 
 
 # Missing value handling 
-
 def fill_missing(
     transactions: list[dict[str, Any]],
     field: str,
@@ -63,13 +59,11 @@ def drop_if_missing(
 
 
 # Column standardisation 
-
 def standardize_descriptions(
     transactions: list[dict[str, Any]],
 ) -> list[dict[str, Any]]:
     """
     Uppercase + strip all description fields.
-    Already done at parse time, but useful after a merge from external sources.
     """
     return [{**t, "description": t["description"].upper().strip()} for t in transactions]
 
@@ -79,7 +73,6 @@ def standardize_dates(
 ) -> list[dict[str, Any]]:
     """
     Re-run date parsing on the 'date' field to guarantee ISO 8601 format.
-    Useful after merging files from parsers with different date outputs.
     """
     from .normalizer import parse_date
     result = []
@@ -90,7 +83,6 @@ def standardize_dates(
 
 
 #  Filters 
-
 def filter_by_date(
     transactions: list[dict[str, Any]],
     from_date: str | None = None,
@@ -115,10 +107,9 @@ def filter_by_amount(
     transactions: list[dict[str, Any]],
     min_amount: float | None = None,
     max_amount: float | None = None,
-) -> list[dict[str, Any]]:
+    ) -> list[dict[str, Any]]:
     """
-    Keep transactions where amount falls within [min_amount, max_amount].
-    Comparisons are on the raw signed float (negative = debit).
+    Keeps transactions where amount falls within [min_amount, max_amount].
     """
     result = []
     for txn in transactions:
@@ -136,9 +127,7 @@ def filter_by_description(
     keyword: str,
     case_sensitive: bool = False,
 ) -> list[dict[str, Any]]:
-    """
-    Keep transactions whose description contains `keyword`.
-    """
+    """Keep transactions whose description contains `keyword`"""
     kw = keyword if case_sensitive else keyword.upper()
     return [
         t for t in transactions
@@ -156,13 +145,11 @@ def filter_by_category(
 
 
 #  Transformations 
-
 def add_month_field(
     transactions: list[dict[str, Any]],
 ) -> list[dict[str, Any]]:
     """
-    Add a 'month' field ('YYYY-MM') derived from 'date'.
-    Useful for grouping / pivot analysis.
+    Adds a 'month' field ('YYYY-MM') derived from 'date'.
     """
     result = []
     for txn in transactions:
@@ -176,8 +163,7 @@ def add_abs_amount_field(
     transactions: list[dict[str, Any]],
 ) -> list[dict[str, Any]]:
     """
-    Add an 'abs_amount' field — unsigned magnitude of the transaction.
-    Useful for sorting by size regardless of direction.
+    Adds an 'abs_amount' field - unsigned magnitude of the transaction.
     """
     return [{**t, "abs_amount": abs(t.get("amount", 0.0))} for t in transactions]
 
@@ -195,7 +181,6 @@ def split_debits_credits(
 
 
 #  Merge 
-
 def merge(
     *transaction_lists: list[dict[str, Any]],
     dedup: bool = True,
@@ -203,12 +188,10 @@ def merge(
 ) -> tuple[list[dict[str, Any]], int]:
     """
     Merge multiple transaction lists into one.
-
     Args:
         *transaction_lists: Any number of canonical transaction lists.
         dedup:              Remove duplicates after merging (default True).
         sort_by_date:       Sort merged result by date ascending (default True).
-
     Returns:
         (merged_list, duplicates_removed)
     """

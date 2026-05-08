@@ -4,6 +4,7 @@ import sys
 from pathlib import Path
 from typing import Any
 
+
 def build_parser() -> argparse.ArgumentParser:
     p = argparse.ArgumentParser(
         prog="LedgerZA",
@@ -26,22 +27,27 @@ def build_parser() -> argparse.ArgumentParser:
         "--output", "-o",
         type=Path,
         help="Output JSON file"
-        )
+    )
     out.add_argument(
         "--no-export",
         action="store_true",
         help="Print summary only — skip JSON export."
-        )
+    )
     out.add_argument(
         "--no-summary", 
         action="store_true",
         help="Export JSON only — skip terminal summary."
-        )
+    )
     out.add_argument(
         "--hide-errors", 
         action="store_true",
         help="Suppress per-row error detail in summary output."
-        )
+    )
+    out.add_argument(
+        "--merge",
+        action="store_true",
+        help="Merge multiple CSV files into a single combined report and JSON output."
+    )
 
     # Folder
     folder = p.add_argument_group("folder")
@@ -49,7 +55,7 @@ def build_parser() -> argparse.ArgumentParser:
         "--recursive", "-r", 
         action="store_true",
         help="Recurse into sub-directories when a folder is given."
-        )
+    )
 
     # Cleaning
     clean = p.add_argument_group("cleaning")
@@ -57,48 +63,48 @@ def build_parser() -> argparse.ArgumentParser:
         "--dedup", 
         action="store_true",
         help="Remove duplicate transactions (matched by date + description + amount)."
-        )
+    )
 
     # Filters   
     filt = p.add_argument_group("filters")  
-    filt.add_argument(  
-        "--from",  
-        dest="from_date",  
-        metavar="YYYY-MM-DD",  
-        help="Include transactions on or after this date.",  
-    )  
-    filt.add_argument(  
-        "--to",  
-        dest="to_date",  
-        metavar="YYYY-MM-DD",  
-        help="Include transactions on or before this date.",  
-    )  
-    filt.add_argument(  
-        "--min-amount",  
-        type=float,  
-        metavar="AMOUNT",  
-        help="Include transactions with amount >= AMOUNT.",  
-    )  
-    filt.add_argument(  
-        "--max-amount",  
-        type=float,  
-        metavar="AMOUNT",  
-        help="Include transactions with amount <= AMOUNT.",  
-    )  
-    filt.add_argument(  
-        "--keyword",  
-        metavar="TEXT",  
-        help="Include only transactions whose description contains TEXT.",  
-    )  
-    filt.add_argument(  
-        "--category",  
-        metavar="CAT",  
-        help="Include only transactions matching this category.",  
-    )  
+    filt.add_argument(
+        "--from", 
+        dest="from_date", 
+        metavar="YYYY-MM-DD", 
+        help="Include transactions on or after this date."
+        )
+    filt.add_argument(
+        "--to", 
+        dest="to_date", 
+        metavar="YYYY-MM-DD",
+        help="Include transactions on or before this date."
+        )
+    filt.add_argument(
+        "--min-amount",
+        type=float,
+        metavar="AMOUNT",
+        help="Include transactions with amount >= AMOUNT."
+        )
+    filt.add_argument(
+        "--max-amount",
+        type=float,
+        metavar="AMOUNT", 
+        help="Include transactions with amount <= AMOUNT."
+        )
+    filt.add_argument(
+        "--keyword",
+        metavar="TEXT",
+        help="Include only transactions whose description contains TEXT."
+        )
+    filt.add_argument(
+        "--category", 
+        metavar="CAT",
+        help="Include only transactions matching this category."
+        )
 
     return p
 
-# Input
+
 def resolve_inputs(paths: list[Path], recursive: bool) -> list[Path]:
     """Expand files + folders into a flat list of CSV files."""
     from .detector import CSV_EXTENSIONS
@@ -126,22 +132,21 @@ def resolve_inputs(paths: list[Path], recursive: bool) -> list[Path]:
 
 
 def parse_all(paths: list[Path]):
+    """Parse multiple files, keep per-file tracking for non-merge mode."""
     from .detector import detect, UnknownFormatError
     from .categorizer import categorize
 
-    all_txns = []
-    all_errors = []
-    all_meta = []
+    file_results = []  # list of (path, txns, errs, meta)
 
     for path in paths:
         try:
             parser = detect(path)
         except (FileNotFoundError, UnknownFormatError) as exc:
-            all_errors.append({
+            file_results.append((path, [], [{
                 "row": 0,
                 "reason": str(exc),
                 "source": str(path),
-            })
+            }], {}))
             continue
 
         result = parser.parse(path)
@@ -150,15 +155,11 @@ def parse_all(paths: list[Path]):
         for txn in result.transactions:
             txn["category"] = categorize(txn["description"], txn.get("category"))
 
-        all_txns.extend(result.transactions)
-        all_errors.extend(result.errors)
+        file_results.append((path, result.transactions, result.errors, result.meta or {}))
 
-        if result.meta:
-            all_meta.append(result.meta)
+    return file_results
 
-    return all_txns, all_errors, all_meta
 
-# Cleaning
 def apply_cleaning(transactions: list[dict], args: argparse.Namespace):
     from .cleaner import (
         deduplicate, filter_by_date, filter_by_amount,
@@ -184,14 +185,11 @@ def apply_cleaning(transactions: list[dict], args: argparse.Namespace):
         transactions = filter_by_category(transactions, args.category)
 
     print(f"Transactions after cleaning: {len(transactions)} (filtered {original - len(transactions)})")
-
     return transactions
 
 
-# Output
 def export(transactions, errors, meta, output_path: Path):
     from .reporter import export_json
-
     try:
         export_json(transactions, output_path, errors, meta)
         print(f"JSON exported → {output_path}")
@@ -208,26 +206,43 @@ def main(argv: list[str] | None = None) -> int:
         print(f"Error: {exc}", file=sys.stderr)
         return 1
 
-    # 1. Parse
-    transactions, errors, metas = parse_all(paths)
+    # 1. Parse (per-file tracking)
+    file_results = parse_all(paths)
 
-    # 2. Clean 
-    transactions = apply_cleaning(transactions, args)
+    all_transactions = []
+    all_errors = []
+    all_meta = []
 
-    # 3. Meta strategy (simple: last file wins)
-    meta = metas[-1] if metas else {}
+    for _, txns, errs, meta in file_results:
+        all_transactions.extend(txns)
+        all_errors.extend(errs)
+        if meta:
+            all_meta.append(meta)
 
-    # 4. Output
+    # 2. Clean (always on aggregate)
+    all_transactions = apply_cleaning(all_transactions, args)
+
+    # 3. Output logic
     if not args.no_summary:
         from .reporter import print_summary
-        print_summary(transactions, errors, "path", meta, not args.hide_errors)
+        
+        if args.merge or len(paths) == 1:
+            # Merged / single file mode
+            meta = all_meta[-1] if all_meta else {}
+            source_label = f"MERGED ({len(paths)} files)" if len(paths) > 1 else str(paths[0])
+            print_summary(all_transactions, all_errors, source_label, meta, not args.hide_errors)
+        else:
+            # Default: per-file summaries
+            print(f"\nProcessed {len(paths)} file(s):\n")
+            for path, txns, errs, meta in file_results:
+                print_summary(txns, errs, str(path), meta, not args.hide_errors)
 
     if not args.no_export:
-        out = args.output or Path("output") / "no-export.json"
-        export(transactions, errors, meta, out)
+        meta = all_meta[-1] if all_meta else {}
+        out_path = args.output or Path("output") / "ledgerza_merged.json" if args.merge else Path("output") / "ledgerza_output.json"
+        export(all_transactions, all_errors, meta, out_path)
 
-    # Exit logic
-    if errors and not transactions:
+    if all_errors and not all_transactions:
         return 1
     return 0
 

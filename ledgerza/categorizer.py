@@ -55,9 +55,8 @@ RULES: list[tuple[tuple[str, ...], str]] = [
 
 def categorize(description: str, existing_category: str | None = None) -> str:
     """
-    Return a category string for the transaction.
+    Returns a category string for the transaction.
     If `existing_category` is already set and meaningful, it is trusted as-is
-    
     Falls back to 'other' if no rule matches.
     """
     if existing_category and existing_category.strip().lower() not in ("", "uncategorized"):

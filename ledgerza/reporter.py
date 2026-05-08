@@ -11,7 +11,6 @@ from typing import Any
 
 
 #  Terminal report 
-
 def print_summary(
     transactions: list[dict[str, Any]],
     errors: list[dict[str, Any]],
@@ -22,7 +21,7 @@ def print_summary(
     W = 52
     bar = "═" * W
 
-    source_name = Path(source_file) if source_file else "unknown"
+    source_name = Path(source_file).name if source_file else "unknown"
     source_label = transactions[0]["source"].upper() if transactions else "UNKNOWN"
 
     print(f"\n{bar}")
@@ -51,9 +50,9 @@ def print_summary(
         return
 
     #  Totals 
-    debits  = [t["amount"] for t in transactions if t["amount"] < 0]
+    debits = [t["amount"] for t in transactions if t["amount"] < 0]
     credits = [t["amount"] for t in transactions if t["amount"] >= 0]
-    net     = sum(credits) + sum(debits)
+    net = sum(credits) + sum(debits)
 
     print(f"  Transactions : {len(transactions):>6}")
     print(f"  Total in     : R{sum(credits):>10.2f}")
@@ -82,7 +81,7 @@ def _print_errors(errors: list[dict], show: bool) -> None:
     print(f"  ⚠  {len(errors)} row(s) skipped or failed:")
     for e in errors:
         row_label = f"Row {e['row']}" if e.get("row") else "File"
-        src       = f"[{e['source']}] " if e.get("source") else ""
+        src = f"[{e['source']}] " if e.get("source") else ""
         print(f"    {src}{row_label}: {e['reason']}")
 
 
@@ -99,20 +98,19 @@ def _group_by_category(transactions: list[dict]) -> dict[str, tuple[int, float]]
 
 
 #  JSON export 
-
 def export_json(
     transactions: list[dict[str, Any]],
     output_path: Path,
     errors: list[dict[str, Any]] | None = None,
     meta: dict[str, Any] | None = None,
 ) -> None:
-    """ Write a structured JSON output file """
+    """ Writes a structured JSON output file """
     output_path.parent.mkdir(parents=True, exist_ok=True)
 
     payload: dict[str, Any] = {
-        "meta":         meta or {},
+        "meta": meta or {},
         "transactions": transactions,
-        "errors":       errors or [],
+        "errors": errors or [],
     }
 
     with output_path.open("w", encoding="utf-8") as fh:

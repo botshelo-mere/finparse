@@ -15,4 +15,4 @@ def parse_file(path: str) -> "ParseResult":
 
 __all__ = ["detect", "detect_folder", "parse_file", "make_transaction",
            "ParseResult", "UnknownFormatError"]
-__version__ = "0.1.0"
+__version__ = "0.1.1"

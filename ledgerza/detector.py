@@ -15,7 +15,6 @@ class UnknownFormatError(Exception):
     pass
 
 
-# Single file 
 def detect(path: Path) -> BaseParser:
     """
     Detect the bank format for a single CSV file
@@ -28,7 +27,7 @@ def detect(path: Path) -> BaseParser:
         raise FileNotFoundError(f"File not found: {path}")
     if path.is_dir():
         raise IsADirectoryError(
-            f"'{path}' is a directory. Use detect_folder() to scan all CSVs in it."
+            f"'{path}' is a directory. Use folder mode properly."
         )
 
     for parser_cls in _PARSERS:
@@ -51,8 +50,8 @@ class FolderScanResult:
 
     def __init__(self) -> None:
         self.matched:   list[tuple[Path, BaseParser]] = []   # (path, parser)
-        self.unmatched: list[Path]                    = []   # no parser found
-        self.skipped:   list[Path]                    = []   # non-CSV files
+        self.unmatched: list[Path] = []   # no parser found
+        self.skipped:   list[Path] = []   # non-CSV files
 
     def __repr__(self) -> str:
         return (
